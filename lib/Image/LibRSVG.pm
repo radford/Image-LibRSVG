@@ -34,7 +34,7 @@ our @EXPORT = qw(
 	
 );
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 require XSLoader;
 XSLoader::load('Image::LibRSVG', $VERSION);
@@ -125,7 +125,7 @@ Image::SVGLibRSVG - Perl extension for librsvg
   
   open( SVGFILE, "< my.svg" );
   local( $/ ) ;
-  $rsvg->loadImageFormString( <SVGFILE> );
+  $rsvg->loadImageFromString( <SVGFILE> );
   close SVGFILE;
   
   $rsvg->saveAs( "my.png" );

@@ -1,4 +1,4 @@
-Image::LibRSVG version 0.01
+Image::LibRSVG version 0.04
 =======================
 
 The README is used to introduce the module and provide instructions on
@@ -16,7 +16,7 @@ INSTALLATION
 
 To install this module type the following:
 
-   perl Makefile.PL
+   perl Makefile.PL [DEFINE=DHAVE_SVGZ=0]
    make
    make test
    make install
@@ -26,7 +26,7 @@ DEPENDENCIES
 This module requires these other modules and libraries:
 
  * librsvg-2.0 (http://librsvg.sf.net)
- * zlib (http://www.gzip.org/zlib/) [optional] 
+ * zlib (http://www.gzip.org/zlib/) [optional] on by default 
 
 COPYRIGHT AND LICENCE
 

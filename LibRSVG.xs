@@ -225,8 +225,12 @@ rsvg_pixbuf_from_chars_with_size_data (const guchar * svg, struct RsvgSizeCallba
     return retval;
 #else
     RsvgHandle * handle = rsvg_handle_new ();
-    GdkPixbuf * retval = rsvg_pixbuf_from_file_with_size_data_ex (handle, file_name, data, error);
+    rsvg_handle_set_size_callback (handle, rsvg_size_callback, data, NULL);
+    rsvg_handle_write (handle, svg, strlen( svg ), error);
+    rsvg_handle_close (handle, error);
+    GdkPixbuf *retval = rsvg_handle_get_pixbuf (handle);
     rsvg_handle_free (handle);
+
     return retval;
 #endif
 }
@@ -253,11 +257,11 @@ rsvg_pixbuf_from_file (const gchar *file_name, GError     **error)
     return rsvg_pixbuf_from_file_at_size (file_name, -1, -1, error);
 }
 
-GdkPixbuf *
+/*GdkPixbuf *
 rsvg_pixbuf_from_chars (const gchar *svg, GError     **error)
 {
     return rsvg_pixbuf_from_chars_at_size (svg, -1, -1, error);
-}
+}*/
 
 
 GdkPixbuf *
@@ -353,6 +357,12 @@ rsvg_pixbuf_from_chars_at_size (const gchar *svg, gint width, gint height, GErro
     data.height = height;
 
     return rsvg_pixbuf_from_chars_with_size_data (svg, &data, error);
+}
+
+GdkPixbuf *
+rsvg_pixbuf_from_chars (const gchar *svg, GError     **error)
+{
+    return rsvg_pixbuf_from_chars_at_size (svg, -1, -1, error);
 }
 
 
@@ -1010,12 +1020,17 @@ SVGLibRSVG::saveAs( bitmapfile, format="png", quality=100 )
         RETVAL
 
 
+        
+        
+## -------------------------------------------------------
+## getImageBitmap
+##    !!!! This is only available from GTK 2.4 !!!!
+## -------------------------------------------------------
 SV * 
 SVGLibRSVG::getImageBitmap( format="png", quality=100 )
         char * format
         int    quality
     CODE:
-        croak( "Not not implemented yet. This function will be available when new gdk-pixbuf is released" );
         struct GError *      my_error_p = NULL;
         gboolean             ret;
         gsize                buffer_size;
@@ -1026,12 +1041,14 @@ SVGLibRSVG::getImageBitmap( format="png", quality=100 )
         char * quality_str;
         SV * result;
         
-        if (strcmp (format, "jpeg") != 0 || (quality < 1 || quality > 100)) {
-            gdk_pixbuf_save_to_buffer (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, NULL);
+        if (strcmp (format, "jpeg") != 0 || (quality < 1 || quality > 100)) 
+        {
+        #    gdk_pixbuf_save_to_buffer (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, NULL);
         }
-        else {
+        else 
+        {
             quality_str = g_strdup_printf ("%d", quality);
-            gdk_pixbuf_save_to_buffer (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, "quality", quality_str, NULL);
+	#    gdk_pixbuf_save_to_buffer (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, "quality", quality_str, NULL);
             g_free (quality_str);
         }
         

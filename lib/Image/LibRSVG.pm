@@ -34,7 +34,7 @@ our @EXPORT = qw(
 	
 );
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 require XSLoader;
 XSLoader::load('Image::LibRSVG', $VERSION);
@@ -66,6 +66,32 @@ sub loadImage {
     return $rv;
 }
 
+sub loadImageFromString {
+    my $self      = shift;
+    my $file_path = shift;
+    my $dpi       = shift;
+    my $args      = shift;
+    
+    my $rv;
+    
+    if( ! defined $args || (scalar keys %{ $args }) == 0 ) {
+        $rv = $self->loadFromString( $file_path );
+    } elsif ( $args->{zoom} ) {
+        $rv = $self->loadFromStringAtZoom( $file_path, $args->{zoom}->[0], $args->{zoom}->[1], $dpi );
+    } elsif( $args->{dimesion} ) {
+        if( defined $args->{dimension}->[2] && $args->{dimension}->[2] ) {
+            $rv = $self->loadFromStringAtMaxSize( $file_path, $args->{dimension}->[0], $args->{dimension}->[1], $dpi );
+        } else {
+            $rv = $self->loadFromStringAtSize( $file_path, $args->{dimension}->[0], $args->{dimension}->[1], $dpi );
+        }
+    } else {
+        $rv = $self->loadFromStringAtZoomWithMax( $file_path, $args->{zoom}->[0], $args->{zoom}->[1], $args->{dimension}->[0], $args->{dimension}->[1], $dpi );
+    }
+    
+    return $rv;
+}
+
+
 1;
 __END__
 
@@ -73,7 +99,7 @@ __END__
 
 =head1 NAME
 
-SVGLibRSVG - Perl extension for librsvg
+Image::SVGLibRSVG - Perl extension for librsvg
 
 =head1 SYNOPSIS
 
@@ -96,6 +122,11 @@ SVGLibRSVG - Perl extension for librsvg
   $isSupported = $rsvg->isFormatSupported("tiff");
   
   $rsvg->loadImage( "my.svg" );
+  
+  open( SVGFILE, "< my.svg" );
+  local( $/ ) ;
+  $rsvg->loadImageFormString( <SVGFILE> );
+  close SVGFILE;
   
   $rsvg->saveAs( "my.png" );
   $rsvg->saveAs( "my.jpg", "jpeg" );
@@ -191,7 +222,11 @@ functions below, the args-variable can hold the following values:
     dimension->[1] ... y-size
 
 =back
-    
+
+=item * B<bool> loadImageFromString( B<String> svgfile[, B<int> dpi=0, B<HashRef> args] )
+
+Loads the image from an String containing a plain SVG. For information about args see loadImage.
+
 =item * B<bool> loadFromFile(B<String> svgfile,[B<int> dpi=0])
 
 =item * B<bool> loadFromFileAtZoom( B<String> svgfile, B<double> x_zoom, B<double> y_zoom[, B<int> dpi=0] )
@@ -202,6 +237,16 @@ functions below, the args-variable can hold the following values:
 
 =item * B<bool> loadFromFileAtZoomWithMax( B<String> svgfile, B<double> x_zoom, B<double> y_zoom, B<int> width, B<int> height[, B<int> dpi=0] )
 
+=item * B<bool> loadFromString(B<String> svgfile,[B<int> dpi=0])
+
+=item * B<bool> loadFromStringAtZoom( B<String> svgfile, B<double> x_zoom, B<double> y_zoom[, B<int> dpi=0] )
+
+=item * B<bool> loadFromStringAtMaxSize( B<String> svgfile, B<int> width, B<int height>[, B<int> dpi=0] )
+
+=item * B<bool> loadFromStringAtSize( B<String> svgfile, B<int> width, B<int> height[, B<int> dpi=0] )
+
+=item * B<bool> loadFromStringAtZoomWithMax( B<String> svgfile, B<double> x_zoom, B<double> y_zoom, B<int> width, B<int> height[, B<int> dpi=0] )
+
 =item * B<bool> convert( B<String> svgfile, B<String> bitmapfile[, B<int> dpi=0, B<String> format="png", B<int> quality=100] )
 
 =item * B<bool> convertAtZoom( B<String> svgfile, B<String> bitmapfile, B<double> x_zoom, B<double> y_zoom[, B<int> dpi=0, B<String> format="png", B<int> quality=100] )
@@ -211,6 +256,7 @@ functions below, the args-variable can hold the following values:
 =item * B<bool> convertAtSize( B<String> svgfile, B<String> bitmapfile, B<int> width, B<int>  height[, B<int> dpi=0, B<String> format="png", B<int> quality=100] )
 
 =item * B<bool> convertAtZoomWithMax( B<String> svgfile, B<String> bitmapfile, B<double> x_zoom, B<double> y_zoom, B<int> width, B<int> height[, B<int> dpi=0, B<String> format="png", B<int> quality=100] )
+
 
 =back
 

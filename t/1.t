@@ -5,7 +5,7 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test::More tests => 19;
+use Test::More tests => 24;
 BEGIN { use_ok('Image::LibRSVG') };
 
 #########################
@@ -15,27 +15,36 @@ BEGIN { use_ok('Image::LibRSVG') };
 
 my $rsvg = new Image::LibRSVG();
 
+open( FILE, "< examples/artscontrol.svg" );
+my $content = join "", <FILE>;
+close( FILE );
+
 ok( defined $rsvg );
 
 ## convert
 ok( $rsvg->convert( "examples/artscontrol.svg", "examples/test.png" ) );
 ok( ! $rsvg->convert( "examples/artscontrol.sv", "examples/test.png" ) );
+ok( $rsvg->loadFromString( $content ) );
 
 ## convertAtZoom
 ok( $rsvg->convertAtZoom( "examples/artscontrol.svg", "examples/test.png", 1.5, 1.5 ) );
 ok( ! $rsvg->convertAtZoom( "examples/artscontrol.sv", "examples/test.png", 1.5, 1.5 ) );
+ok( $rsvg->loadFromStringAtZoom( $content, 1.5, 1.5 ) );
 
 ## convertAtMaxSize
 ok( $rsvg->convertAtMaxSize( "examples/artscontrol.svg", "examples/test.png", 200, 300 ) );
 ok( ! $rsvg->convertAtMaxSize( "examples/artscontrol.sv", "examples/test.png", 200, 300 ) );
+ok( $rsvg->loadFromStringAtMaxSize( $content, 200, 300 ) );
 
 ## convertAtSize
 ok( $rsvg->convertAtSize( "examples/artscontrol.svg", "examples/test.png", 200, 300 ) );
 ok( ! $rsvg->convertAtSize( "examples/artscontrol.sv", "examples/test.png", 200, 300 ) );
+ok( $rsvg->loadFromStringAtSize( $content, 200, 300 ) );
 
 ## convertAtZoomWithMax
 ok( $rsvg->convertAtZoomWithMax( "examples/artscontrol.svg", "examples/test.png", 1.5, 1.5, 200, 300 ) );
 ok( ! $rsvg->convertAtZoomWithMax( "examples/artscontrol.sv", "examples/test.png", 1.5, 1.5, 200, 300 ) );
+ok( $rsvg->loadFromStringAtZoomWithMax( $content, 1.5, 1.5, 200, 300 ) );
 
 ## loading & saving
 ok( $rsvg->loadImage( "examples/artscontrol.svg" ) );

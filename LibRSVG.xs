@@ -166,20 +166,26 @@ rsvg_pixbuf_from_file_with_size_data (const gchar * file_name, struct RsvgSizeCa
 
     /* test for GZ marker */
     if ((result >= 2) && (chars[0] == (guchar)0x1f) && (chars[1] == (guchar)0x8b))
+    {
         handle = rsvg_handle_new_gz ();
+    }
     else
+    {
         handle = rsvg_handle_new ();
+    }
 
     rsvg_handle_set_size_callback (handle, rsvg_size_callback, data, NULL);
     rsvg_handle_write (handle, chars, result, error);
 
     while ((result = fread (chars, 1, SVG_BUFFER_SIZE, f)) > 0)
+    {
         rsvg_handle_write (handle, chars, result, error);
-
+    }
+    
     rsvg_handle_close (handle, error);
     retval = rsvg_handle_get_pixbuf (handle);
 
-    fclose (f);	
+    fclose (f);
     rsvg_handle_free (handle);
     return retval;
 #else
@@ -191,190 +197,69 @@ rsvg_pixbuf_from_file_with_size_data (const gchar * file_name, struct RsvgSizeCa
 }
 
 
-/**
- * rsvg_pixbuf_from_file_at_size_ex:
- * @handle: The RSVG handle you wish to render with (either normal or gzipped)
- * @file_name: A file name
- * @width: The new width, or -1
- * @height: The new height, or -1
- * @error: return location for errors
- * 
- * Loads a new #GdkPixbuf from @file_name and returns it.  This pixbuf is scaled
- * from the size indicated to the new size indicated by @width and @height.  If
- * either of these are -1, then the default size of the image being loaded is
- * used.  The caller must assume the reference to the returned pixbuf. If an
- * error occurred, @error is set and %NULL is returned. Returned handle is closed
- * by this call and must be freed by the caller.
- * 
- * Return value: A newly allocated #GdkPixbuf, or %NULL
- *
- * Since: 2.4
- */
-GdkPixbuf  *
-rsvg_pixbuf_from_file_at_size_ex (RsvgHandle * handle, const gchar *file_name, gint width, gint height, GError **error)
+static GdkPixbuf *
+rsvg_pixbuf_from_chars_with_size_data (const guchar * svg, struct RsvgSizeCallbackData * data, GError ** error)
 {
-    struct RsvgSizeCallbackData data;
+#if HAVE_SVGZ
+    RsvgHandle * handle;
+    GdkPixbuf *retval;
+    gint result;
 
-    data.type = RSVG_SIZE_WH;
-    data.width = width;
-    data.height = height;
-
-    return rsvg_pixbuf_from_file_with_size_data_ex (handle, file_name, &data, error);
+    
+    /* test for GZ marker */
+    if ( (svg[0] == (guchar)0x1f) && (svg[1] == (guchar)0x8b) )
+    {
+        handle = rsvg_handle_new_gz ();
+    }
+    else
+    {
+        handle = rsvg_handle_new ();
+    }
+    
+    rsvg_handle_set_size_callback (handle, rsvg_size_callback, data, NULL);
+    rsvg_handle_write (handle, svg, strlen( svg ), error);
+    rsvg_handle_close (handle, error);
+    retval = rsvg_handle_get_pixbuf (handle);
+    rsvg_handle_free (handle);
+    
+    return retval;
+#else
+    RsvgHandle * handle = rsvg_handle_new ();
+    GdkPixbuf * retval = rsvg_pixbuf_from_file_with_size_data_ex (handle, file_name, data, error);
+    rsvg_handle_free (handle);
+    return retval;
+#endif
 }
 
-/**
- * rsvg_pixbuf_from_file_ex:
- * @handle: The RSVG handle you wish to render with (either normal or gzipped)
- * @file_name: A file name
- * @error: return location for errors
- * 
- * Loads a new #GdkPixbuf from @file_name and returns it.  The caller must
- * assume the reference to the reurned pixbuf. If an error occurred, @error is
- * set and %NULL is returned. Returned handle is closed by this call and must be
- * freed by the caller.
- * 
- * Return value: A newly allocated #GdkPixbuf, or %NULL
- *
- * Since: 2.4
- */
-GdkPixbuf  *
-rsvg_pixbuf_from_file_ex (RsvgHandle * handle, const gchar  *file_name, GError      **error)
-{
-    return rsvg_pixbuf_from_file_at_size_ex (handle, file_name, -1, -1, error);
-}
 
-/**
- * rsvg_pixbuf_from_file_at_zoom_ex:
- * @handle: The RSVG handle you wish to render with (either normal or gzipped)
- * @file_name: A file name
- * @x_zoom: The horizontal zoom factor
- * @y_zoom: The vertical zoom factor
- * @error: return location for errors
- * 
- * Loads a new #GdkPixbuf from @file_name and returns it.  This pixbuf is scaled
- * from the size indicated by the file by a factor of @x_zoom and @y_zoom.  The
- * caller must assume the reference to the returned pixbuf. If an error
- * occurred, @error is set and %NULL is returned. Returned handle is closed by this 
- * call and must be freed by the caller.
- * 
- * Return value: A newly allocated #GdkPixbuf, or %NULL
- *
- * Since: 2.4
- */
-GdkPixbuf  *
-rsvg_pixbuf_from_file_at_zoom_ex (RsvgHandle * handle, const gchar  *file_name, double        x_zoom, double        y_zoom,  GError      **error)
-{
-    struct RsvgSizeCallbackData data;
 
-    g_return_val_if_fail (file_name != NULL, NULL);
-    g_return_val_if_fail (x_zoom > 0.0 && y_zoom > 0.0, NULL);
 
-    data.type = RSVG_SIZE_ZOOM;
-    data.x_zoom = x_zoom;
-    data.y_zoom = y_zoom;
 
-    return rsvg_pixbuf_from_file_with_size_data_ex (handle, file_name, &data, error);
-}
 
-/**
- * rsvg_pixbuf_from_file_at_max_size_ex:
- * @handle: The RSVG handle you wish to render with (either normal or gzipped)
- * @file_name: A file name
- * @max_width: The requested max width
- * @max_height: The requested max heigh
- * @error: return location for errors
- * 
- * Loads a new #GdkPixbuf from @file_name and returns it.  This pixbuf is uniformly
- * scaled so that the it fits into a rectangle of size max_width * max_height. The
- * caller must assume the reference to the returned pixbuf. If an error occurred,
- * @error is set and %NULL is returned. Returned handle is closed by this call and 
- * must be freed by the caller.
- * 
- * Return value: A newly allocated #GdkPixbuf, or %NULL
- *
- * Since: 2.4
- */
-GdkPixbuf  *
-rsvg_pixbuf_from_file_at_max_size_ex (RsvgHandle * handle, const gchar  *file_name, gint max_width, gint max_height, GError      **error)
-{
-    struct RsvgSizeCallbackData data;
 
-    data.type = RSVG_SIZE_WH_MAX;
-    data.width = max_width;
-    data.height = max_height;
 
-    return rsvg_pixbuf_from_file_with_size_data_ex (handle, file_name, &data, error);
-}
 
-/**
- * rsvg_pixbuf_from_file_at_zoom_with_max_ex:
- * @handle: The RSVG handle you wish to render with (either normal or gzipped)
- * @file_name: A file name
- * @x_zoom: The horizontal zoom factor
- * @y_zoom: The vertical zoom factor
- * @max_width: The requested max width
- * @max_height: The requested max heigh
- * @error: return location for errors
- * 
- * Loads a new #GdkPixbuf from @file_name and returns it.  This pixbuf is scaled
- * from the size indicated by the file by a factor of @x_zoom and @y_zoom. If the
- * resulting pixbuf would be larger than max_width/max_heigh it is uniformly scaled
- * down to fit in that rectangle. The caller must assume the reference to the
- * returned pixbuf. If an error occurred, @error is set and %NULL is returned.
- * Returned handle is closed by this call and must be freed by the caller.
- * 
- * Return value: A newly allocated #GdkPixbuf, or %NULL
- *
- * Since: 2.4
- */
-GdkPixbuf  *
-rsvg_pixbuf_from_file_at_zoom_with_max_ex (RsvgHandle * handle, const gchar  *file_name, double x_zoom, double y_zoom, gint max_width, gint max_height, GError **error)
-{
-    struct RsvgSizeCallbackData data;
 
-    g_return_val_if_fail (file_name != NULL, NULL);
-    g_return_val_if_fail (x_zoom > 0.0 && y_zoom > 0.0, NULL);
 
-    data.type = RSVG_SIZE_ZOOM_MAX;
-    data.x_zoom = x_zoom;
-    data.y_zoom = y_zoom;
-    data.width = max_width;
-    data.height = max_height;
 
-    return rsvg_pixbuf_from_file_with_size_data_ex (handle, file_name, &data, error);
-}
 
-/**
- * rsvg_pixbuf_from_file:
- * @file_name: A file name
- * @error: return location for errors
- * 
- * Loads a new #GdkPixbuf from @file_name and returns it.  The caller must
- * assume the reference to the reurned pixbuf. If an error occurred, @error is
- * set and %NULL is returned.
- * 
- * Return value: A newly allocated #GdkPixbuf, or %NULL
- **/
+
+
+
+
 GdkPixbuf *
 rsvg_pixbuf_from_file (const gchar *file_name, GError     **error)
 {
     return rsvg_pixbuf_from_file_at_size (file_name, -1, -1, error);
 }
 
-/**
- * rsvg_pixbuf_from_file_at_zoom:
- * @file_name: A file name
- * @x_zoom: The horizontal zoom factor
- * @y_zoom: The vertical zoom factor
- * @error: return location for errors
- * 
- * Loads a new #GdkPixbuf from @file_name and returns it.  This pixbuf is scaled
- * from the size indicated by the file by a factor of @x_zoom and @y_zoom.  The
- * caller must assume the reference to the returned pixbuf. If an error
- * occurred, @error is set and %NULL is returned.
- * 
- * Return value: A newly allocated #GdkPixbuf, or %NULL
- **/
+GdkPixbuf *
+rsvg_pixbuf_from_chars (const gchar *svg, GError     **error)
+{
+    return rsvg_pixbuf_from_chars_at_size (svg, -1, -1, error);
+}
+
+
 GdkPixbuf *
 rsvg_pixbuf_from_file_at_zoom (const gchar *file_name, double x_zoom, double y_zoom, GError **error)
 {
@@ -390,23 +275,24 @@ rsvg_pixbuf_from_file_at_zoom (const gchar *file_name, double x_zoom, double y_z
     return rsvg_pixbuf_from_file_with_size_data (file_name, &data, error);
 }
 
-/**
- * rsvg_pixbuf_from_file_at_zoom_with_max:
- * @file_name: A file name
- * @x_zoom: The horizontal zoom factor
- * @y_zoom: The vertical zoom factor
- * @max_width: The requested max width
- * @max_height: The requested max heigh
- * @error: return location for errors
- * 
- * Loads a new #GdkPixbuf from @file_name and returns it.  This pixbuf is scaled
- * from the size indicated by the file by a factor of @x_zoom and @y_zoom. If the
- * resulting pixbuf would be larger than max_width/max_heigh it is uniformly scaled
- * down to fit in that rectangle. The caller must assume the reference to the
- * returned pixbuf. If an error occurred, @error is set and %NULL is returned.
- * 
- * Return value: A newly allocated #GdkPixbuf, or %NULL
- **/
+GdkPixbuf *
+rsvg_pixbuf_from_chars_at_zoom (const gchar *file_name, double x_zoom, double y_zoom, GError **error)
+{
+    struct RsvgSizeCallbackData data;
+
+    g_return_val_if_fail (file_name != NULL, NULL);
+    g_return_val_if_fail (x_zoom > 0.0 && y_zoom > 0.0, NULL);
+
+    data.type = RSVG_SIZE_ZOOM;
+    data.x_zoom = x_zoom;
+    data.y_zoom = y_zoom;
+    
+    return rsvg_pixbuf_from_chars_with_size_data (file_name, &data, error);
+}
+
+
+
+
 GdkPixbuf  *
 rsvg_pixbuf_from_file_at_zoom_with_max (const gchar  *file_name, double x_zoom, double y_zoom, gint max_width, gint max_height, GError **error)
 {
@@ -424,21 +310,26 @@ rsvg_pixbuf_from_file_at_zoom_with_max (const gchar  *file_name, double x_zoom, 
     return rsvg_pixbuf_from_file_with_size_data (file_name, &data, error);
 }
 
-/**
- * rsvg_pixbuf_from_file_at_size:
- * @file_name: A file name
- * @width: The new width, or -1
- * @height: The new height, or -1
- * @error: return location for errors
- * 
- * Loads a new #GdkPixbuf from @file_name and returns it.  This pixbuf is scaled
- * from the size indicated to the new size indicated by @width and @height.  If
- * either of these are -1, then the default size of the image being loaded is
- * used.  The caller must assume the reference to the returned pixbuf. If an
- * error occurred, @error is set and %NULL is returned.
- * 
- * Return value: A newly allocated #GdkPixbuf, or %NULL
- **/
+GdkPixbuf  *
+rsvg_pixbuf_from_chars_at_zoom_with_max (const gchar  *file_name, double x_zoom, double y_zoom, gint max_width, gint max_height, GError **error)
+{
+    struct RsvgSizeCallbackData data;
+
+    g_return_val_if_fail (file_name != NULL, NULL);
+    g_return_val_if_fail (x_zoom > 0.0 && y_zoom > 0.0, NULL);
+
+    data.type = RSVG_SIZE_ZOOM_MAX;
+    data.x_zoom = x_zoom;
+    data.y_zoom = y_zoom;
+    data.width = max_width;
+    data.height = max_height;
+
+    return rsvg_pixbuf_from_chars_with_size_data (file_name, &data, error);
+}
+
+
+
+
 GdkPixbuf *
 rsvg_pixbuf_from_file_at_size (const gchar *file_name, gint width, gint height, GError **error)
 {
@@ -451,20 +342,22 @@ rsvg_pixbuf_from_file_at_size (const gchar *file_name, gint width, gint height, 
     return rsvg_pixbuf_from_file_with_size_data (file_name, &data, error);
 }
 
-/**
- * rsvg_pixbuf_from_file_at_max_size:
- * @file_name: A file name
- * @max_width: The requested max width
- * @max_height: The requested max heigh
- * @error: return location for errors
- * 
- * Loads a new #GdkPixbuf from @file_name and returns it.  This pixbuf is uniformly
- * scaled so that the it fits into a rectangle of size max_width * max_height. The
- * caller must assume the reference to the returned pixbuf. If an error occurred,
- * @error is set and %NULL is returned.
- * 
- * Return value: A newly allocated #GdkPixbuf, or %NULL
- **/
+
+GdkPixbuf *
+rsvg_pixbuf_from_chars_at_size (const gchar *svg, gint width, gint height, GError **error)
+{
+    struct RsvgSizeCallbackData data;
+
+    data.type = RSVG_SIZE_WH;
+    data.width = width;
+    data.height = height;
+
+    return rsvg_pixbuf_from_chars_with_size_data (svg, &data, error);
+}
+
+
+
+
 GdkPixbuf  *
 rsvg_pixbuf_from_file_at_max_size (const gchar *file_name, gint max_width, gint max_height, GError **error)
 {
@@ -477,6 +370,20 @@ rsvg_pixbuf_from_file_at_max_size (const gchar *file_name, gint max_width, gint 
     return rsvg_pixbuf_from_file_with_size_data (file_name, &data, error);
 }
 
+GdkPixbuf  *
+rsvg_pixbuf_from_chars_at_max_size (const gchar *file_name, gint max_width, gint max_height, GError **error)
+{
+    struct RsvgSizeCallbackData data;
+
+    data.type = RSVG_SIZE_WH_MAX;
+    data.width = max_width;
+    data.height = max_height;
+        
+    return rsvg_pixbuf_from_chars_with_size_data (file_name, &data, error);
+}
+
+
+
 
 int
 save( int quality, char * format, GdkPixbuf * pixbuf, char * filename ) {
@@ -484,8 +391,11 @@ save( int quality, char * format, GdkPixbuf * pixbuf, char * filename ) {
     int rv;
     
     if (strcmp (format, "jpeg") != 0 || (quality < 1 || quality > 100)) /* is a png or is an invalid quality */
+    {
         rv = gdk_pixbuf_save (pixbuf, filename, format, NULL, NULL);
-    else {
+    }
+    else 
+    {
         quality_str = g_strdup_printf ("%d", quality);
         rv = gdk_pixbuf_save (pixbuf, filename, format, NULL, "quality", quality_str, NULL);
         g_free (quality_str);
@@ -656,7 +566,7 @@ SVGLibRSVG::convert( svgfile, bitmapfile, dpi=0, format="png", quality=100  )
     OUTPUT:
         RETVAL
 
-
+        
 int
 SVGLibRSVG::convertAtZoom( svgfile, bitmapfile, x_zoom, y_zoom, dpi=0, format="png", quality=100 )
         char   * svgfile
@@ -804,6 +714,38 @@ SVGLibRSVG::loadFromFile( svgfile, dpi=0 )
     OUTPUT:
         RETVAL
 
+int
+SVGLibRSVG::loadFromString( svg, dpi=0  )
+        char   * svg
+        double   dpi
+    CODE:
+        
+        g_type_init ();
+        
+        if (dpi > 0.) {
+            rsvg_set_default_dpi (dpi);
+        }
+        
+        if( THIS->pixbuf ) {
+            g_object_unref ( G_OBJECT (THIS->pixbuf) );
+        }
+        
+        THIS->pixbuf = rsvg_pixbuf_from_chars( svg, NULL );
+        
+        if( THIS->pixbuf ) 
+        {
+            RETVAL = 1;
+        } 
+        else 
+        {
+            RETVAL = 0;
+        }
+    OUTPUT:
+        RETVAL
+
+## -------------------------------------------------------
+## -------------------------------------------------------
+
         
 int
 SVGLibRSVG::loadFromFileAtZoom( svgfile, x_zoom, y_zoom, dpi=0 )
@@ -831,8 +773,40 @@ SVGLibRSVG::loadFromFileAtZoom( svgfile, x_zoom, y_zoom, dpi=0 )
         }
     OUTPUT:
         RETVAL
-        
 
+
+int
+SVGLibRSVG::loadFromStringAtZoom( svg, x_zoom, y_zoom, dpi=0 )
+        char   * svg
+        double   x_zoom
+        double   y_zoom
+        double   dpi
+    CODE: 
+        g_type_init ();
+        
+        if (dpi > 0.) {
+            rsvg_set_default_dpi (dpi);
+        }
+
+        if( THIS->pixbuf ) {
+            g_object_unref ( G_OBJECT (THIS->pixbuf) );
+        }
+        
+        THIS->pixbuf = rsvg_pixbuf_from_chars_at_zoom( svg, x_zoom, y_zoom, NULL );
+        
+        if( THIS->pixbuf ) {
+            RETVAL = 1;
+        } else {
+            RETVAL = 0;
+        }
+    OUTPUT:
+        RETVAL
+
+        
+## -------------------------------------------------------
+## -------------------------------------------------------
+        
+        
 int
 SVGLibRSVG::loadFromFileAtMaxSize( svgfile, width, height, dpi=0 )
         char   * svgfile
@@ -860,8 +834,39 @@ SVGLibRSVG::loadFromFileAtMaxSize( svgfile, width, height, dpi=0 )
     OUTPUT:
         RETVAL
 
-
         
+int
+SVGLibRSVG::loadFromStringAtMaxSize( svgfile, width, height, dpi=0 )
+        char   * svgfile
+        int      width
+        int      height
+        double   dpi
+    CODE: 
+        g_type_init ();
+        
+        if (dpi > 0.) {
+            rsvg_set_default_dpi (dpi);
+        }
+        
+        if( THIS->pixbuf ) {
+            g_object_unref ( G_OBJECT (THIS->pixbuf) );
+        }
+
+        THIS->pixbuf = rsvg_pixbuf_from_chars_at_max_size( svgfile, width, height, NULL );
+        
+        if( THIS->pixbuf ) {
+            RETVAL = 1;
+        } else {
+            RETVAL = 0;
+        }
+    OUTPUT:
+        RETVAL
+
+
+## -------------------------------------------------------
+## -------------------------------------------------------
+
+       
 int
 SVGLibRSVG::loadFromFileAtSize( svgfile, width, height, dpi=0 )
         char   * svgfile
@@ -888,6 +893,39 @@ SVGLibRSVG::loadFromFileAtSize( svgfile, width, height, dpi=0 )
         }
     OUTPUT:
         RETVAL
+
+
+int
+SVGLibRSVG::loadFromStringAtSize( svgfile, width, height, dpi=0 )
+        char   * svgfile
+        int      width
+        int      height
+        double   dpi
+    CODE: 
+        g_type_init ();
+        
+        if (dpi > 0.) {
+            rsvg_set_default_dpi (dpi);
+        }
+        
+        if( THIS->pixbuf ) {
+            g_object_unref ( G_OBJECT (THIS->pixbuf) );
+        }
+
+        THIS->pixbuf = rsvg_pixbuf_from_chars_at_size( svgfile, width, height, NULL );
+        
+        if( THIS->pixbuf ) {
+            RETVAL = 1;
+        } else {
+            RETVAL = 0;
+        }
+    OUTPUT:
+        RETVAL
+
+                
+## -------------------------------------------------------
+## -------------------------------------------------------
+
         
 
 int
@@ -921,6 +959,37 @@ SVGLibRSVG::loadFromFileAtZoomWithMax( svgfile, x_zoom, y_zoom, width, height, d
     OUTPUT:
         RETVAL
 
+int
+SVGLibRSVG::loadFromStringAtZoomWithMax( svgfile, x_zoom, y_zoom, width, height, dpi=0 )
+        char   * svgfile
+        double   x_zoom
+        double   y_zoom
+        int      width
+        int      height
+        double   dpi
+    CODE: 
+        GdkPixbuf *pixbuf;
+        
+        g_type_init ();
+        
+        if (dpi > 0.) {
+            rsvg_set_default_dpi (dpi);
+        }
+        
+        if( THIS->pixbuf ) {
+            g_object_unref ( G_OBJECT (THIS->pixbuf) );
+        }
+
+        THIS->pixbuf = rsvg_pixbuf_from_chars_at_zoom_with_max( svgfile, x_zoom, y_zoom, width, height, NULL );
+        
+        if( THIS->pixbuf ) {
+            RETVAL = 1;
+        } else {
+            RETVAL = 0;
+        }
+    OUTPUT:
+        RETVAL
+        
 
 ## -------------------------------------------------------
 ## SAVE-FUNCTIONS
@@ -947,26 +1016,25 @@ SVGLibRSVG::getImageBitmap( format="png", quality=100 )
         int    quality
     CODE:
         croak( "Not not implemented yet. This function will be available when new gdk-pixbuf is released" );
-##        struct GError *      my_error_p = NULL;
-##        gboolean             ret;
-##        gsize                buffer_size;
-##        gchar *              buffer;
-##        
-##        buffer_size = SVG_BUFFER_SIZE;
-##        
-##        char * quality_str;
-##        SV * result;
-##        
-##        if (strcmp (format, "jpeg") != 0 || (quality < 1 || quality > 100)) {
-##            gdk_pixbuf_save_to_buffer (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, NULL);
-##        }
-##        else {
-##            quality_str = g_strdup_printf ("%d", quality);
-##            gdk_pixbuf_save (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, "quality", quality_str, NULL);
-##            g_free (quality_str);
-##        }
-##        
-##        RETVAL = newSVpv( buffer, 0 );
-##        
-##    OUTPUT:
-##        RETVAL
+        struct GError *      my_error_p = NULL;
+        gboolean             ret;
+        gsize                buffer_size;
+        gchar *              buffer;
+        
+        buffer_size = SVG_BUFFER_SIZE;
+        
+        char * quality_str;
+        SV * result;
+        
+        if (strcmp (format, "jpeg") != 0 || (quality < 1 || quality > 100)) {
+            gdk_pixbuf_save_to_buffer (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, NULL);
+        }
+        else {
+            quality_str = g_strdup_printf ("%d", quality);
+            gdk_pixbuf_save_to_buffer (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, "quality", quality_str, NULL);
+            g_free (quality_str);
+        }
+        
+        RETVAL = newSVpv( buffer, 0 );        
+    OUTPUT:
+        RETVAL

@@ -34,7 +34,7 @@ our @EXPORT = qw(
 	
 );
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 require XSLoader;
 XSLoader::load('Image::LibRSVG', $VERSION);
@@ -134,6 +134,8 @@ Image::SVGLibRSVG - Perl extension for librsvg
   $rsvg->loadImage( "my.svg", 0, { zoom => [ 1.5, 1.5 ] } );
   $rsvg->saveAs( "zoomed.png" );
   
+  my $bitmap = $rsvg->getImageBitmap();
+  
 =head1 ABSTRACT
 
   This module provides an Perl-Interface towards the gnome-lib
@@ -176,6 +178,10 @@ returns all formats you can store your svg image into
 =item * B<bool> isFormatSupported( String format )
 
 returns true if you can store your image in this format else false
+
+=item * B<bool> isGzCompressionSupported()
+
+return true if zlib-Support is enabled
 
 =back
 
@@ -257,7 +263,15 @@ Loads the image from an String containing a plain SVG. For information about arg
 
 =item * B<bool> convertAtZoomWithMax( B<String> svgfile, B<String> bitmapfile, B<double> x_zoom, B<double> y_zoom, B<int> width, B<int> height[, B<int> dpi=0, B<String> format="png", B<int> quality=100] )
 
+=item * B<bool> saveAs( B<String> filename, [ B<String> type, B<String> quality ] )
 
+Saves the image to a file
+
+=item * B<SV> getBitmap( [ B<String> type, B<String> quality ] )
+
+Saves the image to a scalar which can be passed on to other applications. This only return a useful
+value if you have compiled it with a gdk-pixbuf greater than or equal to 2.4
+    
 =back
 
 =head1 SEE ALSO

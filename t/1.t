@@ -5,7 +5,7 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test::More tests => 24;
+use Test::More tests => 28;
 BEGIN { use_ok('Image::LibRSVG') };
 
 #########################
@@ -50,8 +50,24 @@ ok( $rsvg->loadFromStringAtZoomWithMax( $content, 1.5, 1.5, 200, 300 ) );
 ok( $rsvg->loadImage( "examples/artscontrol.svg" ) );
 ok( $rsvg->saveAs( "examples/test.png" ) );
 
+## get pictures as scalar
+ok( $rsvg->getImageBitmap() );
+
+## check when loading fails
 ok( ! $rsvg->loadImage( "examples/artscontrol.sv" ) );
 ok( ! $rsvg->saveAs( "examples/test.png" ) );
+
+## check if compression is supported
+ok( Image::LibRSVG->isGzCompressionSupported() == 1 );
+
+## if we use z-lib let's give it a try
+if( Image::LibRSVG->isGzCompressionSupported() ) {
+    ok( $rsvg->loadImage( "examples/artscontrol.svg.gz" ) );
+    ok( $rsvg->saveAs( "examples/test.png" ) );
+} else {
+    ok(1);
+    ok(1);
+}
 
 ## formats
 ok( ref( Image::LibRSVG->getKnownFormats() ) eq "ARRAY" );

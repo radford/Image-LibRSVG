@@ -1,5 +1,9 @@
 Revision history for Perl extension Image::LibRSVG.
 
+0.05   - enabled new function "getBitmap" which returns the bitmap into a scalar
+       - added new function "isGzCompressionSupported" to check if gzipped files can be passed
+       - added some new tests
+
 0.04   
        - fixed typo in POD (cpan-bug-id 6187)
        - fixed problems with detecting zlib support 

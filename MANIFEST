@@ -6,6 +6,7 @@ README
 lib/Image/LibRSVG.pm
 LibRSVG.xs
 t/1.t
+typemap
 examples.pl
 examples/artscontrol.svg
 examples/kate.svg

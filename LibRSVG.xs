@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <gdk-pixbuf/gdk-pixbuf-features.h>
 
 #define SVG_BUFFER_SIZE (1024 * 8)
 
@@ -501,20 +502,6 @@ SVGLibRSVG::getKnownFormats()
     OUTPUT:
         RETVAL
 
-## PART OF NEXT RELEASE
-##static SV*
-##SVGLibRSVG::getKnownFormatsAndTheirMimeTypes()
-##   CODE:
-##        GSList *formats = gdk_pixbuf_get_formats ();
-##        HV * results = (HV *)sv_2mortal( (SV *)newHV() );
-##
-##        g_slist_foreach ( formats, add_to_formats_list, results );
-##        g_slist_free (formats);
-##        RETVAL = newRV((SV *)results);
-##    OUTPUT:
-##        RETVAL
-
-
 static int
 SVGLibRSVG::isFormatSupported( format_string )
         char *format_string
@@ -543,7 +530,25 @@ SVGLibRSVG::isFormatSupported( format_string )
         }
     OUTPUT:
         RETVAL
-        
+
+#if HAVE_SVGZ
+static bool
+SVGLibRSVG::isGzCompressionSupported()
+        CODE:
+            RETVAL = 1;
+        OUTPUT:
+            RETVAL
+
+#else
+static bool
+SVGLibRSVG::isGzCompressionSupported()
+        CODE:
+            RETVAL = 0;
+        OUTPUT:
+            RETVAL
+
+#endif
+
 
         
 ## -------------------------------------------------------
@@ -1021,37 +1026,60 @@ SVGLibRSVG::saveAs( bitmapfile, format="png", quality=100 )
 
 
         
-        
+
+
 ## -------------------------------------------------------
 ## getImageBitmap
-##    !!!! This is only available from GTK 2.4 !!!!
+##    !!!! This is only available from GDK-PIXBUF 2.4 !!!!
 ## -------------------------------------------------------
+#if GDK_PIXBUF_MAJOR > 2 || ( GDK_PIXBUF_MAJOR == 2 && GDK_PIXBUF_MINOR >= 4 )
 SV * 
 SVGLibRSVG::getImageBitmap( format="png", quality=100 )
         char * format
         int    quality
     CODE:
-        struct GError *      my_error_p = NULL;
-        gboolean             ret;
-        gsize                buffer_size;
-        gchar *              buffer;
+        GError *      my_error_p = NULL;
+        gboolean      ret;
+        gsize         buffer_size;
+        gchar *       buffer;
         
         buffer_size = SVG_BUFFER_SIZE;
         
         char * quality_str;
-        SV * result;
         
         if (strcmp (format, "jpeg") != 0 || (quality < 1 || quality > 100)) 
         {
-        #    gdk_pixbuf_save_to_buffer (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, NULL);
+            if( ! gdk_pixbuf_save_to_buffer (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, "tEXt::Software", "testpixbuf-save",NULL) ) {
+                fprintf (stderr, "%s", my_error_p->message);
+                g_error_free (my_error_p);
+            } else {
+                RETVAL = newSVpv( buffer, buffer_size );
+                g_free( buffer );
+            }
         }
         else 
         {
             quality_str = g_strdup_printf ("%d", quality);
-	#    gdk_pixbuf_save_to_buffer (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, "quality", quality_str, NULL);
+            if( ! gdk_pixbuf_save_to_buffer (THIS->pixbuf, &buffer, &buffer_size, format, &my_error_p, "quality", quality_str, NULL) ) {
+                fprintf (stderr, "%s", my_error_p->message);
+                g_error_free (my_error_p);
+            } else {
+                RETVAL = newSVpv( buffer, buffer_size );
+                g_free( buffer );
+            }
             g_free (quality_str);
         }
-        
-        RETVAL = newSVpv( buffer, 0 );        
     OUTPUT:
         RETVAL
+
+#else
+SV * 
+SVGLibRSVG::getImageBitmap( format="png", quality=100 )
+        char * format
+        int    quality
+    CODE:
+        RETVAL = NULL;
+    OUTPUT:
+        RETVAL
+
+#endif

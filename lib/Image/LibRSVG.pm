@@ -34,7 +34,7 @@ our @EXPORT = qw(
 	
 );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 require XSLoader;
 XSLoader::load('Image::LibRSVG', $VERSION);
@@ -54,13 +54,13 @@ sub loadImage {
     } elsif ( $args->{zoom} ) {
         $rv = $self->loadFromFileAtZoom( $file_path, $args->{zoom}->[0], $args->{zoom}->[1], $dpi );
     } elsif( $args->{dimesion} ) {
-        if( defined $args->{dimesion}->[2] && $args->{dimesion}->[2] ) {
-            $rv = $self->loadFromFileAtMaxSize( $file_path, $args->{dimesion}->[0], $args->{dimesion}->[1], $dpi );
+        if( defined $args->{dimension}->[2] && $args->{dimension}->[2] ) {
+            $rv = $self->loadFromFileAtMaxSize( $file_path, $args->{dimension}->[0], $args->{dimension}->[1], $dpi );
         } else {
-            $rv = $self->loadFromFileAtSize( $file_path, $args->{dimesion}->[0], $args->{dimesion}->[1], $dpi );
+            $rv = $self->loadFromFileAtSize( $file_path, $args->{dimension}->[0], $args->{dimension}->[1], $dpi );
         }
     } else {
-        $rv = $self->loadFromFileAtZoomWithMax( $file_path, $args->{zoom}->[0], $args->{zoom}->[1], $args->{dimesion}->[0], $args->{dimesion}->[1], $dpi );
+        $rv = $self->loadFromFileAtZoomWithMax( $file_path, $args->{zoom}->[0], $args->{zoom}->[1], $args->{dimension}->[0], $args->{dimension}->[1], $dpi );
     }
     
     return $rv;
@@ -77,14 +77,14 @@ SVGLibRSVG - Perl extension for librsvg
 
 =head1 SYNOPSIS
 
-  use XML::LibRSVG;
+  use Image::LibRSVG;
   
   ## static Methods
   my $known_formats = Image::LibRSVG->getKnownFormats();
   my $formats       = Image::LibRSVG->getSupportedFormats();
   my $isSupported   = Image::LibRSVG->isFormatSupported("tiff");
   
-  my $rsvg = new XML::LibRSVG();
+  my $rsvg = new Image::LibRSVG();
   
   $rsvg->convert("my.svg", "my.png" );
   $rsvg->convertAtZoom("my.svg", "my.png", 1.5, 1.5 );

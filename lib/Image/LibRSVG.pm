@@ -99,7 +99,7 @@ __END__
 
 =head1 NAME
 
-Image::SVGLibRSVG - Perl extension for librsvg
+Image::LibRSVG - Perl extension for librsvg
 
 =head1 SYNOPSIS
 
@@ -178,10 +178,6 @@ returns all formats you can store your svg image into
 =item * B<bool> isFormatSupported( String format )
 
 returns true if you can store your image in this format else false
-
-=item * B<bool> isGzCompressionSupported()
-
-return true if zlib-Support is enabled
 
 =back
 

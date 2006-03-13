@@ -4,7 +4,6 @@ my %config;
 
 $config{INC} = ' ' . `pkg-config --cflags librsvg-2.0`;
 $config{LIBS} = ' ' . `pkg-config --libs-only-l librsvg-2.0`;
-$config{DEFINE} = ' -DHAVE_SVGZ=1';
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.

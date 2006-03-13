@@ -1,6 +1,6 @@
 Revision history for Perl extension Image::LibRSVG.
 
-0.06   - fixed loading of gz files with new version (RT 18146)
+0.06   - fixed loading of gz files with new version
        - removed DEFINE from Makefile-call (old librvg installations can use 0.05)
 
 0.05   - enabled new function "getBitmap" which returns the bitmap into a scalar

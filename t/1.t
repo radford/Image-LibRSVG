@@ -5,7 +5,7 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test::More tests => 28;
+use Test::More tests => 27;
 BEGIN { use_ok('Image::LibRSVG') };
 
 #########################
@@ -56,9 +56,6 @@ ok( $rsvg->getImageBitmap() );
 ## check when loading fails
 ok( ! $rsvg->loadImage( "examples/artscontrol.sv" ) );
 ok( ! $rsvg->saveAs( "examples/test.png" ) );
-
-## check if compression is supported
-ok( Image::LibRSVG->isGzCompressionSupported() == 1 );
 
 ## if we use z-lib let's give it a try
 if( Image::LibRSVG->isGzCompressionSupported() ) {

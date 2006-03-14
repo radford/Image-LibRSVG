@@ -1,5 +1,7 @@
 Revision history for Perl extension Image::LibRSVG.
 
+0.07   - cpan release of 0.06 holds wrong version
+
 0.06   - fixed loading of gz files with new version (RT 18146)
        - removed DEFINE from Makefile-call (old librvg installations can use 0.05)
 

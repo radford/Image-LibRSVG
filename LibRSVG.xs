@@ -383,6 +383,7 @@ new( CLASS )
     CODE:
         Newz(0, RETVAL, 1, SVGLibRSVG);
         RETVAL->pixbuf = NULL;
+        rsvg_init();
     OUTPUT:
         RETVAL
 

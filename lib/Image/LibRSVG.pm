@@ -53,7 +53,7 @@ sub loadImage {
         $rv = $self->loadFromFile( $file_path );
     } elsif ( $args->{zoom} ) {
         $rv = $self->loadFromFileAtZoom( $file_path, $args->{zoom}->[0], $args->{zoom}->[1], $dpi );
-    } elsif( $args->{dimesion} ) {
+    } elsif( $args->{dimension} ) {
         if( defined $args->{dimension}->[2] && $args->{dimension}->[2] ) {
             $rv = $self->loadFromFileAtMaxSize( $file_path, $args->{dimension}->[0], $args->{dimension}->[1], $dpi );
         } else {
@@ -78,7 +78,7 @@ sub loadImageFromString {
         $rv = $self->loadFromString( $file_path );
     } elsif ( $args->{zoom} ) {
         $rv = $self->loadFromStringAtZoom( $file_path, $args->{zoom}->[0], $args->{zoom}->[1], $dpi );
-    } elsif( $args->{dimesion} ) {
+    } elsif( $args->{dimension} ) {
         if( defined $args->{dimension}->[2] && $args->{dimension}->[2] ) {
             $rv = $self->loadFromStringAtMaxSize( $file_path, $args->{dimension}->[0], $args->{dimension}->[1], $dpi );
         } else {

@@ -1,5 +1,9 @@
 Revision history for Perl extension Image::LibRSVG.
 
+0.08   - corrected typo in loadImage dimesion => dimension
+       - add call to rsvg_init()
+       - use all the pkg-config library flags
+
 0.07   - cpan release of 0.06 holds wrong version
 
 0.06   - fixed loading of gz files with new version (RT 18146)
